@@ -21,7 +21,6 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -37,14 +36,15 @@ import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.vision.*;
+import frc.robot.util.FieldManager;
+import frc.robot.util.MapleUtil;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
-import org.ironmaple.simulation.gamepieces.GamePieceProjectile;
+import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeAlgaeOnField;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnField;
-import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnFly;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -60,6 +60,7 @@ public class RobotContainer {
 
     private final Intake intake;
     private final Elevator elevator;
+    private final FieldManager fieldManager;
 
     private SwerveDriveSimulation driveSimulation = null;
 
@@ -128,6 +129,7 @@ public class RobotContainer {
 
         intake = new Intake(driveSimulation);
         elevator = new Elevator();
+        fieldManager = new FieldManager(driveSimulation);
 
         // Set up auto routines
         autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -155,20 +157,10 @@ public class RobotContainer {
         // Default command, normal field-relative drive
         drive.setDefaultCommand(DriveCommands.joystickDrive(
                 drive, () -> -controller.getLeftY(), () -> -controller.getLeftX(), () -> -controller.getRightX()));
-                
-        controller.cross()
-                .onTrue(new InstantCommand(() -> {
-                        SimulatedArena.getInstance()
-                                .addGamePieceProjectile(
-                                        new GamePieceProjectile(
-                                                ReefscapeCoralOnField.REEFSCAPE_CORAL_INFO,
-                                                new Translation2d(),
-                                                new Translation2d(),
-                                                3,
-                                                1,
-                                                new Rotation3d()
-                                ));
-                }));
+
+        controller.square().onTrue(new InstantCommand(() -> {
+            
+        }));
 
         controller.circle().onTrue(new InstantCommand(() -> {
             elevator.toggle();
