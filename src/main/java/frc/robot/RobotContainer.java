@@ -20,29 +20,28 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.Units;
-import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.vision.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
-import org.ironmaple.simulation.gamepieces.GamePieceOnFieldSimulation;
-import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeAlgaeOnField;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeAlgaeOnFly;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -124,7 +123,7 @@ public class RobotContainer {
                 break;
         }
 
-        intake = new Intake();
+        intake = new Intake(driveSimulation);
 
         // Set up auto routines
         autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -153,28 +152,23 @@ public class RobotContainer {
         drive.setDefaultCommand(DriveCommands.joystickDrive(
                 drive, () -> -controller.getLeftY(), () -> -controller.getLeftX(), () -> -controller.getRightX()));
 
-        controller
-                .circle()
-                .onTrue(new InstantCommand(() -> {
-                        DriverStation.reportWarning("A Button Pressed!!", true);
-                        SimulatedArena.getInstance().addGamePieceProjectile(
-                                new ReefscapeAlgaeOnFly(
-                                        new Translation2d(4, 4), 
-                                        new Translation2d(), 
-                                        new ChassisSpeeds(), 
-                                        new Rotation2d(), 
-                                        Units.Meters.of(2), 
-                                        Units.MetersPerSecond.of(0), 
-                                        Units.Degrees.of(0))
-                        );
-                }));
+        controller.circle().onTrue(new InstantCommand(() -> {
+            DriverStation.reportWarning("A Button Pressed!!", true);
+            SimulatedArena.getInstance()
+                    .addGamePieceProjectile(new ReefscapeAlgaeOnFly(
+                            new Translation2d(4, 4),
+                            new Translation2d(),
+                            new ChassisSpeeds(),
+                            new Rotation2d(),
+                            Units.Meters.of(2),
+                            Units.MetersPerSecond.of(0),
+                            Units.Degrees.of(0)));
+        }));
 
-        controller
-                .R2()
-                .onTrue(new InstantCommand(() -> {
-                        DriverStation.reportWarning("Intake Button Pressed!!", true);
-                        intake.toggleIntakePosition();
-                }));
+        controller.R2().onTrue(new InstantCommand(() -> {
+            DriverStation.reportWarning("Intake Button Pressed!!", true);
+            intake.toggleIntakePosition();
+        }));
         // Lock to 0° when A button is held
         // controller
         //         .a()
@@ -185,11 +179,6 @@ public class RobotContainer {
         // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
         // Reset gyro / odometry
-        // final Runnable resetGyro = Constants.currentMode == Constants.Mode.SIM
-        //         ? () -> drive.setPose(
-        //                 driveSimulation
-        //                         .getSimulatedDriveTrainPose()) // reset odometry to actual robot pose during simulation
-        //         : () -> drive.setPose(new Pose2d(drive.getPose().getTranslation(), new Rotation2d())); // zero gyro
     }
 
     /**
@@ -205,6 +194,7 @@ public class RobotContainer {
         if (Constants.currentMode != Constants.Mode.SIM) return;
 
         driveSimulation.setSimulationWorldPose(new Pose2d(3, 3, new Rotation2d()));
+        drive.setPose(driveSimulation.getSimulatedDriveTrainPose());
         SimulatedArena.getInstance().resetFieldForAuto();
     }
 
@@ -229,7 +219,14 @@ public class RobotContainer {
 
         Logger.recordOutput(
                 "FieldSimulation/Coral", SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
-        Logger.recordOutput(
-                "FieldSimulation/Algae", SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
+
+        List<Pose3d> algae =
+                new ArrayList<>(Arrays.asList(SimulatedArena.getInstance().getGamePiecesArrayByType("Algae")));
+        if (intake.isHoldingAlgae()) {
+            Pose3d intakeAlgae = new Pose3d(driveSimulation.getSimulatedDriveTrainPose())
+                    .plus(new Transform3d(new Translation3d(-0.55, 0, 0.275), new Rotation3d()));
+            algae.add(intakeAlgae);
+        }
+        Logger.recordOutput("FieldSimulation/Algae", algae.toArray(new Pose3d[0]));
     }
 }
