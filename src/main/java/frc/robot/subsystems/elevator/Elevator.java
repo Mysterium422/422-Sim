@@ -37,7 +37,7 @@ public class Elevator extends SubsystemBase {
         L1(35, 24),
         L2(25, 40),
         L3(25, 41),
-        L4(65, 71),
+        L4(60, 72),
         REEF_INTAKE(80, 48);
 
         public final double manipulatorAngle;
@@ -51,6 +51,7 @@ public class Elevator extends SubsystemBase {
 
     private State currentGoal = State.STOW;
     @Getter private boolean holdingCoral = false;
+    private int coralFromFunnelAnimationTimer = 0;
 
     public Elevator(SwerveDriveSimulation driveSimulation) {
         this.driveSimulation = driveSimulation;
@@ -58,8 +59,8 @@ public class Elevator extends SubsystemBase {
 
     @Override
     public void periodic() {
-        desiredManipulatorPosition = currentGoal.manipulatorAngle + 15;
-        desiredElevatorPosition = currentGoal.elevatorDistance + 5;
+        desiredManipulatorPosition = currentGoal.manipulatorAngle;
+        desiredElevatorPosition = currentGoal.elevatorDistance;
 
         if (desiredManipulatorPosition != currentManipulatorPosition) {
             double difference = desiredManipulatorPosition - currentManipulatorPosition;
@@ -79,6 +80,8 @@ public class Elevator extends SubsystemBase {
 
         Logger.recordOutput("Manipulator/current", currentManipulatorPosition);
         Logger.recordOutput("Manipulator/desired", desiredManipulatorPosition);
+
+        if (coralFromFunnelAnimationTimer > 0) coralFromFunnelAnimationTimer--;
     }
 
     // Max of stage 1: 26.687
@@ -93,14 +96,16 @@ public class Elevator extends SubsystemBase {
     public Pose3d getStage3Pose() {
         return new Pose3d(
                 new Translation3d(
-                        Inches.zero(), Inches.zero(), Inches.of(Math.max(0, currentElevatorPosition - 18.25))),
+                        Inches.zero(), Inches.zero(), Inches.of(Math.max(0, currentElevatorPosition - 18))),
                 new Rotation3d());
     }
+
+    // x
 
     public Pose3d getStage2Pose() {
         return new Pose3d(
                 new Translation3d(
-                        Inches.zero(), Inches.zero(), Inches.of(Math.max(0, currentElevatorPosition - 18.25 - 26.687))),
+                        Inches.zero(), Inches.zero(), Inches.of(Math.max(0, currentElevatorPosition - 45))),
                 new Rotation3d());
     }
 
@@ -136,6 +141,7 @@ public class Elevator extends SubsystemBase {
 
     public void getCoralFromFunnel() {
         holdingCoral = true;
+        coralFromFunnelAnimationTimer = 25;
     }
 
     public Pose3d getCoralPose() {
@@ -147,6 +153,17 @@ public class Elevator extends SubsystemBase {
             new Translation3d(0.02, 0, 0.1),
             new Rotation3d()
         )));
+
+        if (coralFromFunnelAnimationTimer > 0) {
+            Pose3d funnelPose = new Pose3d(driveSimulation.getSimulatedDriveTrainPose())
+                .plus(new Transform3d(
+                    new Translation3d(-0.08, 0, 0.33),
+                    new Rotation3d(Degrees.zero(), Degrees.of(45), Degrees.of(0))));
+
+            manipulatorPose = manipulatorPose.interpolate(funnelPose, coralFromFunnelAnimationTimer / 25.0);
+        }
+
+        
         // Pose3d rotatedCoralPose = manipulatorPose.rotateBy(new Rotation3d(
         //     Degrees.zero(), Degrees.of(30), Degrees.of(0)
         // ));
@@ -161,21 +178,23 @@ public class Elevator extends SubsystemBase {
         Translation3d velocity = new Translation3d(1.75, coralPose.getRotation());
         // SimulatedArena.getInstance().addGamePieceProjectile(MapleUtil.generateCoralAtPoint(getCoralPose(), velocity));
 
+        holdingCoral =  false;
+
         SimulatedArena.getInstance()
-    .addGamePieceProjectile(new ReefscapeCoralOnFly(
-        // Obtain robot position from drive simulation
-        driveSimulation.getSimulatedDriveTrainPose().getTranslation(),
-        // The scoring mechanism is installed at (0.46, 0) (meters) on the robot
-        new Translation2d(coralTransform.getX(), 0),
-        // Obtain robot speed from drive simulation
-        driveSimulation.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
-        // Obtain robot facing from drive simulation
-        driveSimulation.getSimulatedDriveTrainPose().getRotation(),
-        // The height at which the coral is ejected
-        coralTransform.getMeasureZ(),
-        // The initial speed of the coral
-        MetersPerSecond.of(1.8),
-        // The coral is ejected vertically downwards
-        coralTransform.getRotation().getMeasureAngle().unaryMinus()));
+            .addGamePieceProjectile(new ReefscapeCoralOnFly(
+            // Obtain robot position from drive simulation
+            driveSimulation.getSimulatedDriveTrainPose().getTranslation(),
+            // The scoring mechanism is installed at (0.46, 0) (meters) on the robot
+            new Translation2d(coralTransform.getX(), 0),
+            // Obtain robot speed from drive simulation
+            driveSimulation.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
+            // Obtain robot facing from drive simulation
+            driveSimulation.getSimulatedDriveTrainPose().getRotation(),
+            // The height at which the coral is ejected
+            coralTransform.getMeasureZ(),
+            // The initial speed of the coral
+            MetersPerSecond.of(1.8),
+            // The coral is ejected vertically downwards
+            coralTransform.getRotation().getMeasureAngle().unaryMinus()));
     }
 }

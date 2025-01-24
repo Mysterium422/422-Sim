@@ -2,6 +2,7 @@ package frc.robot.subsystems.funnel;
 
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Degrees;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -31,6 +32,9 @@ public class Funnel extends SubsystemBase {
     private boolean holdingCoral = false;
     public boolean isRunning = false;
     private int waitBeforeNext = 0;
+    
+    private int animationTimer = 0;
+    private Pose3d oldCoralPose;
 
     @Override
     public void periodic() {
@@ -61,6 +65,8 @@ public class Funnel extends SubsystemBase {
                 }
 
                 holdingCoral = true;
+                oldCoralPose = piece.getPose3d();
+                animationTimer = 16;
                 SimulatedArena.getInstance().removeProjectile(piece);
                 break;
             }
@@ -94,9 +100,23 @@ public class Funnel extends SubsystemBase {
         if (waitBeforeNext > 0) {
             waitBeforeNext -= 1;
         }
+
+        if (animationTimer > 0) animationTimer--;
     }
 
     public boolean isHoldingCoral() {
         return holdingCoral;
+    }
+
+    public Pose3d getCoralPose() {
+        Pose3d output = new Pose3d(driveSimulation.getSimulatedDriveTrainPose())
+            .plus(new Transform3d(
+                    new Translation3d(-0.08, 0, 0.33),
+                    new Rotation3d(Degrees.zero(), Degrees.of(45), Degrees.of(0))));
+
+        if (oldCoralPose != null) {
+            output = output.interpolate(oldCoralPose, animationTimer / 16.0);
+        }
+        return output;
     }
 }

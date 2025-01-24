@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.units.Units;
@@ -24,7 +25,7 @@ public class Intake extends SubsystemBase {
 
     private State currentGoal = State.STOW;
 
-    private final SwerveDriveSimulation driveTrainSimulation;
+    private final SwerveDriveSimulation driveSimulation;
     private final IntakeSimulation intakeSimulation;
 
     public enum State {
@@ -32,13 +33,13 @@ public class Intake extends SubsystemBase {
         INTAKING
     }
 
-    public Intake(SwerveDriveSimulation driveTrainSimulation) {
-        this.driveTrainSimulation = driveTrainSimulation;
+    public Intake(SwerveDriveSimulation driveSimulation) {
+        this.driveSimulation = driveSimulation;
         intakeSimulation = IntakeSimulation.OverTheBumperIntake(
                 // Specify the type of game pieces that the intake can collect
                 "Algae",
                 // Specify the drivetrain to which this intake is attached
-                driveTrainSimulation,
+                driveSimulation,
                 // Width of the intake
                 Meters.of(0.52),
                 // The extension length of the intake beyond the robot's frame (when activated)
@@ -78,7 +79,7 @@ public class Intake extends SubsystemBase {
             intakeSimulation.stopIntake();
             if (isHoldingAlgae()) {
                 intakeSimulation.obtainGamePieceFromIntake();
-                Pose2d drivetrainPose = driveTrainSimulation.getSimulatedDriveTrainPose();
+                Pose2d drivetrainPose = driveSimulation.getSimulatedDriveTrainPose();
                 // Translation2d target = FieldConstants.Processor.centerFace.getTranslation();
                 // double distance = drivetrainPose.getTranslation().getDistance(target);
 
@@ -94,7 +95,7 @@ public class Intake extends SubsystemBase {
                 //         new ReefscapeAlgaeOnFly(
                 //             drivetrainPose.getTranslation(),
                 //             new Translation2d(1.55, 0),
-                //             driveTrainSimulation.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
+                //             driveSimulation.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
                 //             drivetrainPose.getRotation().plus(Rotation2d.fromDegrees(180)),
                 //             Meters.of(0.275),
                 //             MetersPerSecond.of(1),
@@ -106,7 +107,7 @@ public class Intake extends SubsystemBase {
                         .addGamePieceProjectile(new ReefscapeAlgaeOnFly(
                                 drivetrainPose.getTranslation(),
                                 new Translation2d(0.65, 0),
-                                driveTrainSimulation.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
+                                driveSimulation.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
                                 drivetrainPose.getRotation().plus(Rotation2d.fromDegrees(180)),
                                 Meters.of(0.275),
                                 MetersPerSecond.of(1.2),
@@ -121,9 +122,13 @@ public class Intake extends SubsystemBase {
 
     public Pose3d getPose() {
         return new Pose3d( // Algae Intake
-                // new Translation3d(0, 0, 0),
                 new Translation3d(-0.31, 0, 0.19),
                 new Rotation3d(Units.Degrees.of(0), Units.Degrees.of(-150 + currentPosition), Units.Degrees.of(180)));
+    }
+
+    public Pose3d getAlgaePosition() {
+        return new Pose3d(driveSimulation.getSimulatedDriveTrainPose())
+            .plus(new Transform3d(new Translation3d(-0.55, 0, 0.275), new Rotation3d()));
     }
 
     public boolean isHoldingAlgae() {

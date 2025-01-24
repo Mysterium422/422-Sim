@@ -233,10 +233,7 @@ public class RobotContainer {
         List<Pose3d> coral = SimulatedArena.getInstance().getGamePiecesByType("Coral");
 
         if (funnel.isHoldingCoral()) {
-            Pose3d funnelCoral = new Pose3d(driveSimulation.getSimulatedDriveTrainPose())
-                    .plus(new Transform3d(
-                            new Translation3d(-0.08, 0, 0.33),
-                            new Rotation3d(Degrees.zero(), Degrees.of(45), Degrees.of(0))));
+            Pose3d funnelCoral = funnel.getCoralPose();
 
             coral.add(funnelCoral);
         }
@@ -249,8 +246,7 @@ public class RobotContainer {
 
         List<Pose3d> algae = SimulatedArena.getInstance().getGamePiecesByType("Algae");
         if (intake.isHoldingAlgae()) {
-            Pose3d intakeAlgae = new Pose3d(driveSimulation.getSimulatedDriveTrainPose())
-                    .plus(new Transform3d(new Translation3d(-0.55, 0, 0.275), new Rotation3d()));
+            Pose3d intakeAlgae = intake.getAlgaePosition();
             algae.add(intakeAlgae);
         }
         Logger.recordOutput("FieldSimulation/Algae", algae.toArray(new Pose3d[0]));
