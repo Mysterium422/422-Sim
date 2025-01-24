@@ -13,6 +13,7 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static frc.robot.subsystems.vision.VisionConstants.*;
 
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -34,17 +35,13 @@ import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.funnel.Funnel;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.vision.*;
 import frc.robot.util.FieldManager;
-import frc.robot.util.MapleUtil;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
-import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeAlgaeOnField;
-import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnField;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -60,6 +57,7 @@ public class RobotContainer {
 
     private final Intake intake;
     private final Elevator elevator;
+    private final Funnel funnel;
     private final FieldManager fieldManager;
 
     private SwerveDriveSimulation driveSimulation = null;
@@ -129,6 +127,7 @@ public class RobotContainer {
 
         intake = new Intake(driveSimulation);
         elevator = new Elevator();
+        funnel = new Funnel(driveSimulation, elevator);
         fieldManager = new FieldManager(driveSimulation);
 
         // Set up auto routines
@@ -158,8 +157,10 @@ public class RobotContainer {
         drive.setDefaultCommand(DriveCommands.joystickDrive(
                 drive, () -> -controller.getLeftY(), () -> -controller.getLeftX(), () -> -controller.getRightX()));
 
-        controller.square().onTrue(new InstantCommand(() -> {
-            
+        controller.L1().onTrue(new InstantCommand(() -> {
+                funnel.isRunning = true;
+        })).onFalse(new InstantCommand(() -> {
+                funnel.isRunning = false;
         }));
 
         controller.circle().onTrue(new InstantCommand(() -> {
@@ -178,7 +179,6 @@ public class RobotContainer {
         }));
 
         controller.R2().onTrue(new InstantCommand(() -> {
-            DriverStation.reportWarning("Intake Button Pressed!!", true);
             intake.toggleIntakePosition();
         }));
         // Lock to 0° when A button is held
@@ -226,11 +226,20 @@ public class RobotContainer {
                     new Rotation3d(Units.Degrees.of(-90 + 0), Units.Degrees.of(0), Units.Degrees.of(0)))
         });
 
-        Logger.recordOutput(
-                "FieldSimulation/Coral", SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
+        List<Pose3d> coral = SimulatedArena.getInstance().getGamePiecesByType("Coral");
 
-        List<Pose3d> algae =
-                new ArrayList<>(Arrays.asList(SimulatedArena.getInstance().getGamePiecesArrayByType("Algae")));
+        if (funnel.isHoldingCoral()) {
+            Pose3d funnelCoral = new Pose3d(driveSimulation.getSimulatedDriveTrainPose())
+                    .plus(new Transform3d(
+                            new Translation3d(-0.08, 0, 0.33),
+                            new Rotation3d(Degrees.zero(), Degrees.of(45), Degrees.of(0))));
+
+            coral.add(funnelCoral);
+        }
+
+        Logger.recordOutput("FieldSimulation/Coral", coral.toArray(new Pose3d[0]));
+
+        List<Pose3d> algae = SimulatedArena.getInstance().getGamePiecesByType("Algae");
         if (intake.isHoldingAlgae()) {
             Pose3d intakeAlgae = new Pose3d(driveSimulation.getSimulatedDriveTrainPose())
                     .plus(new Transform3d(new Translation3d(-0.55, 0, 0.275), new Rotation3d()));

@@ -8,11 +8,14 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import lombok.Getter;
 import org.littletonrobotics.junction.Logger;
 
 public class Elevator extends SubsystemBase {
 
+    @Getter
     private double currentElevatorPosition = 0;
+
     private double desiredElevatorPosition = 0;
 
     private double currentManipulatorPosition = 0;

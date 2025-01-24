@@ -11,7 +11,6 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.FieldConstants;
 import org.ironmaple.simulation.IntakeSimulation;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
@@ -80,15 +79,15 @@ public class Intake extends SubsystemBase {
             if (isHoldingAlgae()) {
                 intakeSimulation.obtainGamePieceFromIntake();
                 Pose2d drivetrainPose = driveTrainSimulation.getSimulatedDriveTrainPose();
-                Translation2d target = FieldConstants.Processor.centerFace.getTranslation();
-                double distance = drivetrainPose.getTranslation().getDistance(target);
+                // Translation2d target = FieldConstants.Processor.centerFace.getTranslation();
+                // double distance = drivetrainPose.getTranslation().getDistance(target);
 
-                Translation2d toTarget = target.minus(drivetrainPose.getTranslation());
-                // Rotation that points from robot to target
-                Rotation2d angleToTarget = new Rotation2d(toTarget.getX(), toTarget.getY());
-                // Difference between robot's heading and the angle to target
-                Rotation2d headingDiff = angleToTarget.minus(drivetrainPose.getRotation());
-                double headingDiffDeg = headingDiff.getDegrees();
+                // Translation2d toTarget = target.minus(drivetrainPose.getTranslation());
+                // // Rotation that points from robot to target
+                // Rotation2d angleToTarget = new Rotation2d(toTarget.getX(), toTarget.getY());
+                // // Difference between robot's heading and the angle to target
+                // Rotation2d headingDiff = angleToTarget.minus(drivetrainPose.getRotation());
+                // double headingDiffDeg = headingDiff.getDegrees();
 
                 // if (distance < 1 && Math.abs(headingDiffDeg) < 10) {
                 //     SimulatedArena.getInstance().addGamePieceProjectile(
