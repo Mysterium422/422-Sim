@@ -12,7 +12,6 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.FieldConstants;
-
 import org.ironmaple.simulation.IntakeSimulation;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
@@ -67,8 +66,6 @@ public class Intake extends SubsystemBase {
             double difference = desiredPosition - currentPosition;
             double delta = Math.min(Math.abs(difference), 5);
             currentPosition += Math.signum(difference) * delta;
-        } else if (currentGoal == State.INTAKING) {
-            intakeSimulation.startIntake();
         }
 
         Logger.recordOutput("Intake/goal", currentGoal);
@@ -106,17 +103,15 @@ public class Intake extends SubsystemBase {
                 //         )
                 //     );
                 // } else {
-                    SimulatedArena.getInstance().addGamePieceProjectile(
-                        new ReefscapeAlgaeOnFly(
-                            drivetrainPose.getTranslation(),
-                            new Translation2d(0.65, 0),
-                            driveTrainSimulation.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
-                            drivetrainPose.getRotation().plus(Rotation2d.fromDegrees(180)),
-                            Meters.of(0.275),
-                            MetersPerSecond.of(1.2),
-                            Units.Degrees.of(15)
-                        )
-                    );
+                SimulatedArena.getInstance()
+                        .addGamePieceProjectile(new ReefscapeAlgaeOnFly(
+                                drivetrainPose.getTranslation(),
+                                new Translation2d(0.65, 0),
+                                driveTrainSimulation.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
+                                drivetrainPose.getRotation().plus(Rotation2d.fromDegrees(180)),
+                                Meters.of(0.275),
+                                MetersPerSecond.of(1.2),
+                                Units.Degrees.of(15)));
                 // }
             }
         } else {

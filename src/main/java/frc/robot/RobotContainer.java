@@ -23,7 +23,6 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -35,6 +34,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.*;
+import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.vision.*;
 import java.util.ArrayList;
@@ -42,7 +42,9 @@ import java.util.Arrays;
 import java.util.List;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
-import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeAlgaeOnFly;
+import org.ironmaple.simulation.gamepieces.GamePieceProjectile;
+import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnField;
+import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnFly;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -57,6 +59,7 @@ public class RobotContainer {
     private final Vision vision;
 
     private final Intake intake;
+    private final Elevator elevator;
 
     private SwerveDriveSimulation driveSimulation = null;
 
@@ -124,6 +127,7 @@ public class RobotContainer {
         }
 
         intake = new Intake(driveSimulation);
+        elevator = new Elevator();
 
         // Set up auto routines
         autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -151,18 +155,34 @@ public class RobotContainer {
         // Default command, normal field-relative drive
         drive.setDefaultCommand(DriveCommands.joystickDrive(
                 drive, () -> -controller.getLeftY(), () -> -controller.getLeftX(), () -> -controller.getRightX()));
+                
+        controller.cross()
+                .onTrue(new InstantCommand(() -> {
+                        SimulatedArena.getInstance()
+                                .addGamePieceProjectile(
+                                        new GamePieceProjectile(
+                                                ReefscapeCoralOnField.REEFSCAPE_CORAL_INFO,
+                                                new Translation2d(),
+                                                new Translation2d(),
+                                                3,
+                                                1,
+                                                new Rotation3d()
+                                ));
+                }));
 
         controller.circle().onTrue(new InstantCommand(() -> {
-            DriverStation.reportWarning("A Button Pressed!!", true);
-            SimulatedArena.getInstance()
-                    .addGamePieceProjectile(new ReefscapeAlgaeOnFly(
-                            new Translation2d(4, 4),
-                            new Translation2d(),
-                            new ChassisSpeeds(),
-                            new Rotation2d(),
-                            Units.Meters.of(2),
-                            Units.MetersPerSecond.of(0),
-                            Units.Degrees.of(0)));
+            elevator.toggle();
+
+            //     DriverStation.reportWarning("A Button Pressed!!", true);
+            //     SimulatedArena.getInstance()
+            //             .addGamePieceProjectile(new ReefscapeAlgaeOnFly(
+            //                     new Translation2d(4, 4),
+            //                     new Translation2d(),
+            //                     new ChassisSpeeds(),
+            //                     new Rotation2d(),
+            //                     Units.Meters.of(2),
+            //                     Units.MetersPerSecond.of(0),
+            //                     Units.Degrees.of(0)));
         }));
 
         controller.R2().onTrue(new InstantCommand(() -> {
@@ -205,13 +225,10 @@ public class RobotContainer {
 
         Logger.recordOutput("FieldSimulation/FinalComponentPoses", new Pose3d[] {
             intake.getPose(),
-            new Pose3d(), // Stage 2
-            new Pose3d(), // Stage 3
-            new Pose3d(), // Carriage
-            new Pose3d( // Manipulator
-                    new Translation3d(0.285, 0, 0.203),
-                    // new Translation3d(-0.31, 0, 0.19),
-                    new Rotation3d(Units.Degrees.of(0), Units.Degrees.of(-90 + 0), Units.Degrees.of(0))),
+            elevator.getStage2Pose(), // Stage 2
+            elevator.getStage3Pose(), // Stage 3
+            elevator.getCarriagePose(), // Carriage
+            elevator.getManipulatorPose(),
             new Pose3d( // Climber
                     new Translation3d(0, -0.336, 0.405),
                     new Rotation3d(Units.Degrees.of(-90 + 0), Units.Degrees.of(0), Units.Degrees.of(0)))
