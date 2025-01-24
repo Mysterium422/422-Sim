@@ -68,7 +68,10 @@ public class Funnel extends SubsystemBase {
         if (holdingCoral) {
             if (isRunning) {
                 if (elevator.getCurrentElevatorPosition() < 0.05) {
-                    this.holdingCoral = false;
+                    if (!elevator.isHoldingCoral()) {
+                        elevator.getCoralFromFunnel();
+                        this.holdingCoral = false;
+                    }
                 } else {
                     Pose2d drivetrainPose = driveSimulation.getSimulatedDriveTrainPose();
 

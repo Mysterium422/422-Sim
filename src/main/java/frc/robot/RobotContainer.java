@@ -126,7 +126,7 @@ public class RobotContainer {
         }
 
         intake = new Intake(driveSimulation);
-        elevator = new Elevator();
+        elevator = new Elevator(driveSimulation);
         funnel = new Funnel(driveSimulation, elevator);
         fieldManager = new FieldManager(driveSimulation);
 
@@ -176,6 +176,10 @@ public class RobotContainer {
             //                     Units.Meters.of(2),
             //                     Units.MetersPerSecond.of(0),
             //                     Units.Degrees.of(0)));
+        }));
+
+        controller.R1().onTrue(new InstantCommand(() -> {
+                elevator.shoot();
         }));
 
         controller.R2().onTrue(new InstantCommand(() -> {
@@ -235,6 +239,10 @@ public class RobotContainer {
                             new Rotation3d(Degrees.zero(), Degrees.of(45), Degrees.of(0))));
 
             coral.add(funnelCoral);
+        }
+
+        if (elevator.isHoldingCoral()) {
+                coral.add(elevator.getCoralPose());
         }
 
         Logger.recordOutput("FieldSimulation/Coral", coral.toArray(new Pose3d[0]));
