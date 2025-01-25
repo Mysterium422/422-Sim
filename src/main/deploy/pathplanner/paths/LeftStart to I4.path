@@ -1,0 +1,66 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 6.976769015663548,
+        "y": 5.131
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 6.726849672381031,
+        "y": 5.137349949073481
+      },
+      "isLocked": false,
+      "linkedName": "LeftStart"
+    },
+    {
+      "anchor": {
+        "x": 5.443632613493016,
+        "y": 5.016901156754579
+      },
+      "prevControl": {
+        "x": 6.478538921059174,
+        "y": 5.093246452450204
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "I4 OTM"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [
+    {
+      "name": "Extend",
+      "waypointRelativePos": 0.0,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "L4"
+        }
+      }
+    }
+  ],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0.75,
+    "rotation": -119.99999999999999
+  },
+  "reversed": false,
+  "folder": null,
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": -119.99999999999999
+  },
+  "useDefaultConstraints": true
+}

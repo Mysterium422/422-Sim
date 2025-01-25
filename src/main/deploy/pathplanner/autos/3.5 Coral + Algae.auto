@@ -1,0 +1,79 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "LeftStart to I4"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ElevatorShoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "I4 to Station"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Station to J4"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ElevatorShoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "J4 to Station"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Station to K4"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ElevatorShoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "K4 to Station"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Station to Stack1"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 5.0
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}

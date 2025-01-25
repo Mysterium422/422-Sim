@@ -19,8 +19,10 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.Threads;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.subsystems.elevator.Elevator.State;
 import org.ironmaple.simulation.SimulatedArena;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
@@ -114,24 +116,37 @@ public class Robot extends LoggedRobot {
     @Override
     public void disabledPeriodic() {}
 
+    private double autoStartTime;
+
     /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
     @Override
     public void autonomousInit() {
+        robotContainer.getElevator().setHoldingCoral(true);
+
         autonomousCommand = robotContainer.getAutonomousCommand();
 
         // schedule the autonomous command (example)
         if (autonomousCommand != null) {
             autonomousCommand.schedule();
         }
+
+        autoStartTime = Timer.getFPGATimestamp();
     }
 
     /** This function is called periodically during autonomous. */
     @Override
-    public void autonomousPeriodic() {}
+    public void autonomousPeriodic() {
+        if (Timer.getFPGATimestamp() - autoStartTime > 15.1) {
+            autonomousCommand.cancel();
+            robotContainer.getDrive().stop();
+        }
+    }
 
     /** This function is called once when teleop is enabled. */
     @Override
     public void teleopInit() {
+        robotContainer.getElevator().setCurrentGoal(State.STOW);
+        robotContainer.getFunnel().isRunning = false;
         // This makes sure that the autonomous stops running when
         // teleop starts running. If you want the autonomous to
         // continue until interrupted by another command, remove

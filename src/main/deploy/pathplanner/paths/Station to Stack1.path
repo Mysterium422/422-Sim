@@ -1,0 +1,114 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 1.0800287849024721,
+        "y": 7.036073318280671
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 1.3881388771359358,
+        "y": 6.489993906365339
+      },
+      "isLocked": false,
+      "linkedName": "LeftStation"
+    },
+    {
+      "anchor": {
+        "x": 1.4828237427636184,
+        "y": 6.153112684779315
+      },
+      "prevControl": {
+        "x": 1.3730627861673688,
+        "y": 6.724320804094192
+      },
+      "nextControl": {
+        "x": 1.610502132800089,
+        "y": 5.488660266437551
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 3.214116427771352,
+        "y": 3.1500814889579813
+      },
+      "prevControl": {
+        "x": 2.217978066796371,
+        "y": 4.471402145314993
+      },
+      "nextControl": {
+        "x": 3.7635653442915187,
+        "y": 2.4212688747138147
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 7.048941240812602,
+        "y": 0.5425356864929199
+      },
+      "prevControl": {
+        "x": 6.723671748260606,
+        "y": 0.8166324338875117
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 1.0219507757222897,
+      "rotationDegrees": 56.00983886411059
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [
+    {
+      "name": "IntakeToggle",
+      "waypointRelativePos": 0.4909028031025595,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "IntakeToggle"
+        }
+      }
+    },
+    {
+      "name": "FunnelStart",
+      "waypointRelativePos": 1.5654879831968125,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "FunnelStart"
+        }
+      }
+    }
+  ],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 89.05473038685678
+  },
+  "reversed": false,
+  "folder": null,
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": -54.661156936482904
+  },
+  "useDefaultConstraints": true
+}

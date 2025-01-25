@@ -52,6 +52,7 @@ public class Elevator extends SubsystemBase {
     private @Getter @Setter State currentGoal = State.STOW;
 
     @Getter
+    @Setter
     private boolean holdingCoral = false;
 
     private @Getter boolean holdingAlgae = false;

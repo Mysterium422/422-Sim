@@ -16,6 +16,11 @@ package frc.robot;
 import static frc.robot.subsystems.vision.VisionConstants.*;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.pathfinding.Pathfinding;
+import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -29,6 +34,10 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.SetIntake;
+import frc.robot.commands.elevator.ElevatorShoot;
+import frc.robot.commands.elevator.SetElevatorPosition;
+import frc.robot.commands.funnel.SetHandoff;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.elevator.Elevator;
@@ -37,7 +46,9 @@ import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.vision.*;
 import frc.robot.util.EricNubControls;
 import frc.robot.util.FieldManager;
+import frc.robot.util.LocalADStarAK;
 import java.util.List;
+import lombok.Getter;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
@@ -50,12 +61,15 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
  */
 public class RobotContainer {
     // Subsystems
-    private final Drive drive;
+    private final @Getter Drive drive;
     private final Vision vision;
 
     private final Intake intake;
+
+    @Getter
     private final Elevator elevator;
-    private final Funnel funnel;
+
+    private final @Getter Funnel funnel;
     private final FieldManager fieldManager;
     private final EricNubControls ericNubControls = new EricNubControls();
 
@@ -129,6 +143,8 @@ public class RobotContainer {
         funnel = new Funnel(driveSimulation, elevator);
         fieldManager = new FieldManager(driveSimulation, elevator);
 
+        configureNamedCommands();
+
         // Set up auto routines
         autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
@@ -144,6 +160,38 @@ public class RobotContainer {
 
         // Configure the button bindings
         configureButtonBindings();
+    }
+
+    private void configureNamedCommands() {
+
+        // Configure AutoBuilder for PathPlanner
+        AutoBuilder.configure(
+                driveSimulation::getSimulatedDriveTrainPose,
+                (pose) -> {
+                    driveSimulation.setSimulationWorldPose(pose);
+                    drive.setPose(driveSimulation.getSimulatedDriveTrainPose());
+                },
+                drive::getChassisSpeeds,
+                drive::runVelocity,
+                new PPHolonomicDriveController(new PIDConstants(5.0, 0.0, 0.0), new PIDConstants(5.0, 0.0, 0.0)),
+                Drive.PP_CONFIG,
+                () -> false,
+                drive);
+
+        Pathfinding.setPathfinder(new LocalADStarAK());
+        PathPlannerLogging.setLogActivePathCallback((activePath) -> {
+            Logger.recordOutput("Odometry/Trajectory", activePath.toArray(new Pose2d[activePath.size()]));
+        });
+        PathPlannerLogging.setLogTargetPoseCallback((targetPose) -> {
+            Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose);
+        });
+
+        NamedCommands.registerCommand("L4", new SetElevatorPosition(elevator, Elevator.State.L4));
+        NamedCommands.registerCommand("ElevatorStow", new SetElevatorPosition(elevator, Elevator.State.STOW));
+        NamedCommands.registerCommand("ElevatorShoot", new ElevatorShoot(elevator));
+        NamedCommands.registerCommand("FunnelStart", new SetHandoff(funnel, true));
+        NamedCommands.registerCommand("FunnelStop", new SetHandoff(funnel, false));
+        NamedCommands.registerCommand("IntakeToggle", new SetIntake(intake));
     }
 
     /**
@@ -278,7 +326,6 @@ public class RobotContainer {
     public void resetSimulationField() {
         if (Constants.currentMode != Constants.Mode.SIM) return;
 
-        driveSimulation.setSimulationWorldPose(new Pose2d(3, 3, new Rotation2d()));
         drive.setPose(driveSimulation.getSimulatedDriveTrainPose());
         SimulatedArena.getInstance().resetFieldForAuto();
 
