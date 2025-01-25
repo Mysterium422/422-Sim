@@ -69,6 +69,10 @@ public class Elevator extends SubsystemBase {
         desiredManipulatorPosition = currentGoal.manipulatorAngle;
         desiredElevatorPosition = currentGoal.elevatorDistance;
 
+        if (currentGoal.equals(State.REEF_INTAKE) && holdingCoral) {
+            shootCoral();
+        }
+
         if (desiredManipulatorPosition != currentManipulatorPosition) {
             double difference = desiredManipulatorPosition - currentManipulatorPosition;
             double delta = Math.min(Math.abs(difference), 3.5);
