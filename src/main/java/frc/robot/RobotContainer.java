@@ -154,15 +154,18 @@ public class RobotContainer {
     private void configureButtonBindings() {
         // Default command, normal field-relative drive
         drive.setDefaultCommand(DriveCommands.joystickDrive(
-                drive, () -> {
-                        double val = ericNubControls.addDeadzoneScaled(controller.getLeftY(), 0.1);
-                        return Math.signum(val) * Math.pow(val, 2);
-                }, () -> {
-                        double val = ericNubControls.addDeadzoneScaled(controller.getLeftX(), 0.1);
-                        return Math.signum(val) * Math.pow(val, 2);
-                }, () ->{
-                        double val = ericNubControls.addDeadzoneScaled(controller.getRightX(), 0.03);
-                        return -Math.signum(val) * Math.pow(val, 4);
+                drive,
+                () -> {
+                    double val = ericNubControls.addDeadzoneScaled(controller.getLeftY(), 0.1);
+                    return Math.signum(val) * Math.pow(val, 2);
+                },
+                () -> {
+                    double val = ericNubControls.addDeadzoneScaled(controller.getLeftX(), 0.1);
+                    return Math.signum(val) * Math.pow(val, 2);
+                },
+                () -> {
+                    double val = ericNubControls.addDeadzoneScaled(controller.getRightX(), 0.03);
+                    return -Math.signum(val) * Math.pow(val, 4);
                 }));
 
         controller
@@ -230,7 +233,7 @@ public class RobotContainer {
                 }));
 
         controller.circle().onTrue(new InstantCommand(() -> {
-            elevator.toggle();
+        //     elevator.toggle();
 
             //     DriverStation.reportWarning("A Button Pressed!!", true);
             //     SimulatedArena.getInstance()

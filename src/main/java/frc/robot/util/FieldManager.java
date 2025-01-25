@@ -118,7 +118,7 @@ public class FieldManager extends SubsystemBase {
 
         for (int i = 0; i < centerFaces.length; i++) {
             Pose3d algaePose = new Pose3d(centerFaces[i]);
-            if (i % 2 == 0) {
+            if (i % 2 == 1) {
                 algaePose = algaePose.transformBy(new Transform3d(new Translation3d(-0.15, 0, 0.87), new Rotation3d()));
             } else {
                 algaePose = algaePose.transformBy(new Transform3d(new Translation3d(-0.15, 0, 1.29), new Rotation3d()));

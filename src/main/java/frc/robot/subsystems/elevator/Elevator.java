@@ -35,7 +35,7 @@ public class Elevator extends SubsystemBase {
     public enum State {
         STOW(0, 0),
         L1(35, 22),
-        L2(25, 22),
+        L2(25, 24),
         L3(25, 41),
         L4(60, 72),
         REEF_INTAKE(80, 72);
@@ -215,22 +215,41 @@ public class Elevator extends SubsystemBase {
 
         holdingCoral = false;
 
-        SimulatedArena.getInstance()
-                .addGamePieceProjectile(new ReefscapeCoralOnFly(
-                        // Obtain robot position from drive simulation
-                        driveSimulation.getSimulatedDriveTrainPose().getTranslation(),
-                        // The scoring mechanism is installed at (0.46, 0) (meters) on the robot
-                        new Translation2d(coralTransform.getX(), 0),
-                        // Obtain robot speed from drive simulation
-                        driveSimulation.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
-                        // Obtain robot facing from drive simulation
-                        driveSimulation.getSimulatedDriveTrainPose().getRotation(),
-                        // The height at which the coral is ejected
-                        coralTransform.getMeasureZ(),
-                        // The initial speed of the coral
-                        MetersPerSecond.of(1.8),
-                        // The coral is ejected vertically downwards
-                        coralTransform.getRotation().getMeasureAngle().unaryMinus()));
+        if (currentGoal.equals(State.L4) && currentElevatorPosition == State.L4.elevatorDistance) {
+            SimulatedArena.getInstance()
+                    .addGamePieceProjectile(new ReefscapeCoralOnFly(
+                            // Obtain robot position from drive simulation
+                            driveSimulation.getSimulatedDriveTrainPose().getTranslation(),
+                            // The scoring mechanism is installed at (0.46, 0) (meters) on the robot
+                            new Translation2d(0.46, 0),
+                            // Obtain robot speed from drive simulation
+                            driveSimulation.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
+                            // Obtain robot facing from drive simulation
+                            driveSimulation.getSimulatedDriveTrainPose().getRotation(),
+                            // The height at which the coral is ejected
+                            Meters.of(2.1),
+                            // The initial speed of the coral
+                            MetersPerSecond.of(1),
+                            // The coral is ejected vertically downwards
+                            Degrees.of(-90)));
+        } else {
+            SimulatedArena.getInstance()
+                    .addGamePieceProjectile(new ReefscapeCoralOnFly(
+                            // Obtain robot position from drive simulation
+                            driveSimulation.getSimulatedDriveTrainPose().getTranslation(),
+                            // The scoring mechanism is installed at (0.46, 0) (meters) on the robot
+                            new Translation2d(coralTransform.getX(), 0),
+                            // Obtain robot speed from drive simulation
+                            driveSimulation.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
+                            // Obtain robot facing from drive simulation
+                            driveSimulation.getSimulatedDriveTrainPose().getRotation(),
+                            // The height at which the coral is ejected
+                            coralTransform.getMeasureZ(),
+                            // The initial speed of the coral
+                            MetersPerSecond.of(1.8),
+                            // The coral is ejected vertically downwards
+                            coralTransform.getRotation().getMeasureAngle().unaryMinus()));
+        }
     }
 
     public void shootAlgae() {
