@@ -3,6 +3,9 @@ package frc.robot.subsystems.intake;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -15,7 +18,9 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.ironmaple.simulation.IntakeSimulation;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
+import org.ironmaple.simulation.gamepieces.GamePieceOnFieldSimulation;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeAlgaeOnFly;
+import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralAlgaeStack;
 import org.littletonrobotics.junction.Logger;
 
 public class Intake extends SubsystemBase {
@@ -41,15 +46,21 @@ public class Intake extends SubsystemBase {
                 // Specify the drivetrain to which this intake is attached
                 driveSimulation,
                 // Width of the intake
-                Meters.of(0.52),
+                Meters.of(0.49),
                 // The extension length of the intake beyond the robot's frame (when activated)
-                Meters.of(0.23),
+                Meters.of(0.21),
                 // The intake is mounted on the back side of the chassis
                 IntakeSimulation.IntakeSide.BACK,
                 // The intake can hold up to 1 note
                 1);
         intakeSimulation.stopIntake();
     }
+
+    Set<GamePieceOnFieldSimulation> previousPieces = new HashSet<>();
+
+    private boolean holdingInPreviousCycle;
+    private Pose3d algaeAnimationPose = new Pose3d();
+    private int algaeAnimationTimer = 0;
 
     @Override
     public void periodic() {
@@ -67,6 +78,32 @@ public class Intake extends SubsystemBase {
             double delta = Math.min(Math.abs(difference), 5);
             currentPosition += Math.signum(difference) * delta;
         }
+
+        Set<GamePieceOnFieldSimulation> currentPieces = new HashSet<>();
+
+        for (GamePieceOnFieldSimulation gamePiece : SimulatedArena.getInstance().gamePiecesOnField()) {
+            if (!gamePiece.type.equals("Algae")) {
+                continue;
+                // && !gamePiece.type.equals("CoralAlgaeStack")
+            }
+
+            currentPieces.add(gamePiece);
+        }
+
+        previousPieces.removeAll(currentPieces);
+
+        Logger.recordOutput("Intake/PreviousSize", previousPieces.size());
+        Logger.recordOutput("Intake/CurrentSize", currentPieces.size());
+
+        if (!previousPieces.isEmpty() && !holdingInPreviousCycle && isHoldingAlgae()) {
+            algaeAnimationPose = previousPieces.toArray(new GamePieceOnFieldSimulation[0])[0].getPose3d();
+            algaeAnimationTimer = 15;
+        }
+
+        holdingInPreviousCycle = isHoldingAlgae();
+        previousPieces = currentPieces;
+
+        if (algaeAnimationTimer > 0) algaeAnimationTimer--;
 
         Logger.recordOutput("Intake/goal", currentGoal);
         Logger.recordOutput("Intake/current", currentPosition);
@@ -127,8 +164,13 @@ public class Intake extends SubsystemBase {
     }
 
     public Pose3d getAlgaePosition() {
-        return new Pose3d(driveSimulation.getSimulatedDriveTrainPose())
-                .plus(new Transform3d(new Translation3d(-0.55, 0, 0.275), new Rotation3d()));
+        Pose3d algaePose = new Pose3d(driveSimulation.getSimulatedDriveTrainPose())
+            .plus(new Transform3d(new Translation3d(-0.55, 0, 0.275), new Rotation3d()));
+
+        if (algaeAnimationTimer > 0 && algaeAnimationPose != null) {
+            algaePose = algaePose.interpolate(algaeAnimationPose, algaeAnimationTimer / 15.0);
+        }
+        return algaePose; 
     }
 
     public boolean isHoldingAlgae() {

@@ -104,7 +104,7 @@ public class FieldManager extends SubsystemBase {
             for (int i = 0; i < reefAlgae.size(); i++) {
                 Pose3d algae = reefAlgae.get(i);
 
-                if (elevator.getCoralPose().getTranslation().getDistance(algae.getTranslation()) < 0.28) {
+                if (elevator.getCoralPose().getTranslation().getDistance(algae.getTranslation()) < 0.18) {
                     reefAlgae.remove(i);
                     elevator.getAlgaeFromReef(algae);
                     break;
