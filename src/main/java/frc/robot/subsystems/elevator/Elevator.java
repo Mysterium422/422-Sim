@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import lombok.Getter;
+import lombok.Setter;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeAlgaeOnFly;
@@ -48,13 +49,16 @@ public class Elevator extends SubsystemBase {
         }
     }
 
-    private State currentGoal = State.STOW;
+    private @Getter @Setter State currentGoal = State.STOW;
 
     @Getter
     private boolean holdingCoral = false;
+
     private @Getter boolean holdingAlgae = false;
 
     private int coralFromFunnelAnimationTimer = 0;
+    private int algaeAnimationTimer = 0;
+    private Pose3d oldReefPosition = null;
 
     public Elevator(SwerveDriveSimulation driveSimulation) {
         this.driveSimulation = driveSimulation;
@@ -85,6 +89,8 @@ public class Elevator extends SubsystemBase {
         Logger.recordOutput("Manipulator/desired", desiredManipulatorPosition);
 
         if (coralFromFunnelAnimationTimer > 0) coralFromFunnelAnimationTimer--;
+
+        if (algaeAnimationTimer > 0) algaeAnimationTimer--;
     }
 
     // Max of stage 1: 26.687
@@ -174,10 +180,14 @@ public class Elevator extends SubsystemBase {
         Pose3d drivePose = new Pose3d(driveSimulation.getSimulatedDriveTrainPose());
 
         Pose3d manipulatorPose = drivePose.transformBy(new Transform3d(
-            new Translation3d(0.35, 0, 0.42 + Inches.of(currentElevatorPosition).in(Meters)),
-            new Rotation3d()
-        ));
-        
+                new Translation3d(
+                        0.35, 0, 0.42 + Inches.of(currentElevatorPosition).in(Meters)),
+                new Rotation3d()));
+
+        if (oldReefPosition != null && algaeAnimationTimer > 0) {
+            manipulatorPose = manipulatorPose.interpolate(oldReefPosition, algaeAnimationTimer / 20.0);
+        }
+
         // drivePose.transformBy(new Transform3d(
         //                 new Translation3d(
         //                         0.285,
@@ -255,7 +265,9 @@ public class Elevator extends SubsystemBase {
         return currentGoal.equals(State.REEF_INTAKE) && !holdingCoral && !holdingAlgae;
     }
 
-    public void getAlgaeFromReef() {
+    public void getAlgaeFromReef(Pose3d reefPosition) {
         holdingAlgae = true;
+        algaeAnimationTimer = 20;
+        oldReefPosition = reefPosition;
     }
 }

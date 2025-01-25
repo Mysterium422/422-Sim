@@ -156,11 +156,66 @@ public class RobotContainer {
 
         controller
                 .L1()
-                .onTrue(new InstantCommand(() -> {
+                .whileTrue(new InstantCommand(() -> {
                     funnel.isRunning = true;
                 }))
                 .onFalse(new InstantCommand(() -> {
                     funnel.isRunning = false;
+                }));
+
+        controller
+                .povDown()
+                .whileTrue(new InstantCommand(() -> {
+                    elevator.setCurrentGoal(Elevator.State.L1);
+                }))
+                .onFalse(new InstantCommand(() -> {
+                    if (elevator.getCurrentGoal().equals(Elevator.State.L1)) {
+                        elevator.setCurrentGoal(Elevator.State.STOW);
+                    }
+                }));
+
+        controller
+                .povLeft()
+                .whileTrue(new InstantCommand(() -> {
+                    elevator.setCurrentGoal(Elevator.State.L2);
+                }))
+                .onFalse(new InstantCommand(() -> {
+                    if (elevator.getCurrentGoal().equals(Elevator.State.L2)) {
+                        elevator.setCurrentGoal(Elevator.State.STOW);
+                    }
+                }));
+
+        controller
+                .povRight()
+                .whileTrue(new InstantCommand(() -> {
+                    elevator.setCurrentGoal(Elevator.State.L3);
+                }))
+                .onFalse(new InstantCommand(() -> {
+                    if (elevator.getCurrentGoal().equals(Elevator.State.L3)) {
+                        elevator.setCurrentGoal(Elevator.State.STOW);
+                    }
+                }));
+
+        controller
+                .povUp()
+                .whileTrue(new InstantCommand(() -> {
+                    elevator.setCurrentGoal(Elevator.State.L4);
+                }))
+                .onFalse(new InstantCommand(() -> {
+                    if (elevator.getCurrentGoal().equals(Elevator.State.L4)) {
+                        elevator.setCurrentGoal(Elevator.State.STOW);
+                    }
+                }));
+
+        controller
+                .L2()
+                .whileTrue(new InstantCommand(() -> {
+                    elevator.setCurrentGoal(Elevator.State.REEF_INTAKE);
+                }))
+                .onFalse(new InstantCommand(() -> {
+                    if (elevator.getCurrentGoal().equals(Elevator.State.REEF_INTAKE)) {
+                        elevator.setCurrentGoal(Elevator.State.STOW);
+                    }
                 }));
 
         controller.circle().onTrue(new InstantCommand(() -> {
@@ -173,7 +228,7 @@ public class RobotContainer {
             //                     new Translation2d(),
             //                     new ChassisSpeeds(),
             //                     new Rotation2d(),
-            //                     Units.Meters.of(2),
+            //                     Units.Meters.of(2),dds
             //                     Units.MetersPerSecond.of(0),
             //                     Units.Degrees.of(0)));
         }));
@@ -250,7 +305,7 @@ public class RobotContainer {
             algae.add(intakeAlgae);
         }
         if (elevator.isHoldingAlgae()) {
-                algae.add(elevator.getAlgaePose());
+            algae.add(elevator.getAlgaePose());
         }
         algae.addAll(fieldManager.getReefAlgae());
         Logger.recordOutput("FieldSimulation/Algae", algae.toArray(new Pose3d[0]));

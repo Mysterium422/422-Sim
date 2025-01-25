@@ -12,9 +12,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.FieldConstants;
 import frc.robot.subsystems.elevator.Elevator;
-
 import java.util.ArrayList;
-import java.util.List;
 import lombok.Getter;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
@@ -53,19 +51,9 @@ public class FieldManager extends SubsystemBase {
         for (int i = 0; i < centerFaces.length; i++) {
             Pose3d algaePose = new Pose3d(centerFaces[i]);
             if (i % 2 == 0) {
-                algaePose = algaePose.transformBy(
-                    new Transform3d(
-                        new Translation3d(-0.15, 0, 0.87),
-                        new Rotation3d()
-                    )
-                );
+                algaePose = algaePose.transformBy(new Transform3d(new Translation3d(-0.15, 0, 0.87), new Rotation3d()));
             } else {
-                algaePose = algaePose.transformBy(
-                    new Transform3d(
-                        new Translation3d(-0.15, 0, 1.29),
-                        new Rotation3d()
-                    )
-                );
+                algaePose = algaePose.transformBy(new Transform3d(new Translation3d(-0.15, 0, 1.29), new Rotation3d()));
             }
 
             reefAlgae.add(algaePose);
@@ -112,14 +100,13 @@ public class FieldManager extends SubsystemBase {
             atLeftStation = false;
         }
 
-
         if (elevator.canHoldAlgae()) {
             for (int i = 0; i < reefAlgae.size(); i++) {
                 Pose3d algae = reefAlgae.get(i);
 
                 if (elevator.getCoralPose().getTranslation().getDistance(algae.getTranslation()) < 0.4) {
                     reefAlgae.remove(i);
-                    elevator.getAlgaeFromReef();
+                    elevator.getAlgaeFromReef(algae);
                     break;
                 }
             }
