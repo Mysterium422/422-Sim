@@ -35,6 +35,7 @@ import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.funnel.Funnel;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.vision.*;
+import frc.robot.util.EricNubControls;
 import frc.robot.util.FieldManager;
 import java.util.List;
 import org.ironmaple.simulation.SimulatedArena;
@@ -56,6 +57,7 @@ public class RobotContainer {
     private final Elevator elevator;
     private final Funnel funnel;
     private final FieldManager fieldManager;
+    private final EricNubControls ericNubControls = new EricNubControls();
 
     private SwerveDriveSimulation driveSimulation = null;
 
@@ -152,7 +154,16 @@ public class RobotContainer {
     private void configureButtonBindings() {
         // Default command, normal field-relative drive
         drive.setDefaultCommand(DriveCommands.joystickDrive(
-                drive, () -> controller.getLeftY(), () -> controller.getLeftX(), () -> -controller.getRightX()));
+                drive, () -> {
+                        double val = ericNubControls.addDeadzoneScaled(controller.getLeftY(), 0.1);
+                        return Math.signum(val) * Math.pow(val, 2);
+                }, () -> {
+                        double val = ericNubControls.addDeadzoneScaled(controller.getLeftX(), 0.1);
+                        return Math.signum(val) * Math.pow(val, 2);
+                }, () ->{
+                        double val = ericNubControls.addDeadzoneScaled(controller.getRightX(), 0.03);
+                        return -Math.signum(val) * Math.pow(val, 4);
+                }));
 
         controller
                 .L1()
