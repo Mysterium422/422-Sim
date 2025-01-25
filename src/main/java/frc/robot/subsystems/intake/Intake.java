@@ -3,9 +3,6 @@ package frc.robot.subsystems.intake;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -15,12 +12,13 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import java.util.HashSet;
+import java.util.Set;
 import org.ironmaple.simulation.IntakeSimulation;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.ironmaple.simulation.gamepieces.GamePieceOnFieldSimulation;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeAlgaeOnFly;
-import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralAlgaeStack;
 import org.littletonrobotics.junction.Logger;
 
 public class Intake extends SubsystemBase {
@@ -165,12 +163,12 @@ public class Intake extends SubsystemBase {
 
     public Pose3d getAlgaePosition() {
         Pose3d algaePose = new Pose3d(driveSimulation.getSimulatedDriveTrainPose())
-            .plus(new Transform3d(new Translation3d(-0.55, 0, 0.275), new Rotation3d()));
+                .plus(new Transform3d(new Translation3d(-0.55, 0, 0.275), new Rotation3d()));
 
         if (algaeAnimationTimer > 0 && algaeAnimationPose != null) {
             algaePose = algaePose.interpolate(algaeAnimationPose, algaeAnimationTimer / 15.0);
         }
-        return algaePose; 
+        return algaePose;
     }
 
     public boolean isHoldingAlgae() {

@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -14,8 +15,10 @@ import frc.robot.FieldConstants;
 import frc.robot.subsystems.elevator.Elevator;
 import java.util.ArrayList;
 import lombok.Getter;
+import org.dyn4j.geometry.Vector2;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
+import org.ironmaple.simulation.gamepieces.GamePieceOnFieldSimulation;
 
 public class FieldManager extends SubsystemBase {
 
@@ -108,6 +111,16 @@ public class FieldManager extends SubsystemBase {
                     reefAlgae.remove(i);
                     elevator.getAlgaeFromReef(algae);
                     break;
+                }
+            }
+        }
+
+        for (GamePieceOnFieldSimulation piece : SimulatedArena.getInstance().gamePiecesOnField()) {
+            if (piece.type.equals("Algae")) {
+                Translation2d pieceLocation = piece.getPoseOnField().getTranslation();
+                Translation2d processorLocation = FieldConstants.Processor.centerFace.getTranslation();
+                if (pieceLocation.getY() < -0.15 && pieceLocation.getDistance(processorLocation) < 1) {
+                    piece.applyForce(new Vector2(pieceLocation.getX() + 0.1, pieceLocation.getY()));
                 }
             }
         }
