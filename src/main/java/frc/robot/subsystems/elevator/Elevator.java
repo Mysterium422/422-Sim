@@ -1,9 +1,9 @@
 package frc.robot.subsystems.elevator;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.Degrees;
 
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -12,11 +12,10 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.util.MapleUtil;
 import lombok.Getter;
-
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
+import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeAlgaeOnFly;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnFly;
 import org.littletonrobotics.junction.Logger;
 
@@ -34,11 +33,11 @@ public class Elevator extends SubsystemBase {
 
     public enum State {
         STOW(0, 0),
-        L1(35, 24),
-        L2(25, 40),
+        L1(35, 22),
+        L2(25, 22),
         L3(25, 41),
         L4(60, 72),
-        REEF_INTAKE(80, 48);
+        REEF_INTAKE(80, 72);
 
         public final double manipulatorAngle;
         public final double elevatorDistance;
@@ -50,7 +49,11 @@ public class Elevator extends SubsystemBase {
     }
 
     private State currentGoal = State.STOW;
-    @Getter private boolean holdingCoral = false;
+
+    @Getter
+    private boolean holdingCoral = false;
+    private @Getter boolean holdingAlgae = false;
+
     private int coralFromFunnelAnimationTimer = 0;
 
     public Elevator(SwerveDriveSimulation driveSimulation) {
@@ -95,8 +98,7 @@ public class Elevator extends SubsystemBase {
 
     public Pose3d getStage3Pose() {
         return new Pose3d(
-                new Translation3d(
-                        Inches.zero(), Inches.zero(), Inches.of(Math.max(0, currentElevatorPosition - 18))),
+                new Translation3d(Inches.zero(), Inches.zero(), Inches.of(Math.max(0, currentElevatorPosition - 18))),
                 new Rotation3d());
     }
 
@@ -104,8 +106,7 @@ public class Elevator extends SubsystemBase {
 
     public Pose3d getStage2Pose() {
         return new Pose3d(
-                new Translation3d(
-                        Inches.zero(), Inches.zero(), Inches.of(Math.max(0, currentElevatorPosition - 45))),
+                new Translation3d(Inches.zero(), Inches.zero(), Inches.of(Math.max(0, currentElevatorPosition - 45))),
                 new Rotation3d());
     }
 
@@ -147,54 +148,114 @@ public class Elevator extends SubsystemBase {
     public Pose3d getCoralPose() {
         Pose3d drivePose = new Pose3d(driveSimulation.getSimulatedDriveTrainPose());
         Pose3d manipulatorPose = drivePose.transformBy(new Transform3d(
-            new Translation3d(0.285, 0, 0.203 + Inches.of(currentElevatorPosition).in(Meters)),
-            new Rotation3d(Degrees.zero(), Degrees.of(currentManipulatorPosition + 10), Degrees.of(0))
-        ).plus(new Transform3d(
-            new Translation3d(0.02, 0, 0.1),
-            new Rotation3d()
-        )));
+                        new Translation3d(
+                                0.285,
+                                0,
+                                0.203 + Inches.of(currentElevatorPosition).in(Meters)),
+                        new Rotation3d(Degrees.zero(), Degrees.of(currentManipulatorPosition + 10), Degrees.of(0)))
+                .plus(new Transform3d(new Translation3d(0.02, 0, 0.1), new Rotation3d())));
 
         if (coralFromFunnelAnimationTimer > 0) {
             Pose3d funnelPose = new Pose3d(driveSimulation.getSimulatedDriveTrainPose())
-                .plus(new Transform3d(
-                    new Translation3d(-0.08, 0, 0.33),
-                    new Rotation3d(Degrees.zero(), Degrees.of(45), Degrees.of(0))));
+                    .plus(new Transform3d(
+                            new Translation3d(-0.08, 0, 0.33),
+                            new Rotation3d(Degrees.zero(), Degrees.of(45), Degrees.of(0))));
 
             manipulatorPose = manipulatorPose.interpolate(funnelPose, coralFromFunnelAnimationTimer / 25.0);
         }
 
-        
         // Pose3d rotatedCoralPose = manipulatorPose.rotateBy(new Rotation3d(
         //     Degrees.zero(), Degrees.of(30), Degrees.of(0)
         // ));
         return manipulatorPose;
     }
 
+    public Pose3d getAlgaePose() {
+        Pose3d drivePose = new Pose3d(driveSimulation.getSimulatedDriveTrainPose());
+
+        Pose3d manipulatorPose = drivePose.transformBy(new Transform3d(
+            new Translation3d(0.35, 0, 0.42 + Inches.of(currentElevatorPosition).in(Meters)),
+            new Rotation3d()
+        ));
+        
+        // drivePose.transformBy(new Transform3d(
+        //                 new Translation3d(
+        //                         0.285,
+        //                         0,
+        //                         0.203 + Inches.of(currentElevatorPosition).in(Meters)),
+        //                 new Rotation3d(Degrees.zero(), Degrees.of(currentManipulatorPosition + 10), Degrees.of(0)))
+        //         .plus(new Transform3d(new Translation3d(0.02, 0, 0.1), new Rotation3d())));
+
+        return manipulatorPose;
+    }
+
     public void shoot() {
+        shootCoral();
+        shootAlgae();
+    }
+
+    public void shootCoral() {
         if (!holdingCoral) return;
 
         Pose3d coralPose = getCoralPose();
         Transform3d coralTransform = coralPose.minus(new Pose3d(driveSimulation.getSimulatedDriveTrainPose()));
         Translation3d velocity = new Translation3d(1.75, coralPose.getRotation());
-        // SimulatedArena.getInstance().addGamePieceProjectile(MapleUtil.generateCoralAtPoint(getCoralPose(), velocity));
+        // SimulatedArena.getInstance().addGamePieceProjectile(MapleUtil.generateCoralAtPoint(getCoralPose(),
+        // velocity));
 
-        holdingCoral =  false;
+        holdingCoral = false;
 
         SimulatedArena.getInstance()
-            .addGamePieceProjectile(new ReefscapeCoralOnFly(
-            // Obtain robot position from drive simulation
-            driveSimulation.getSimulatedDriveTrainPose().getTranslation(),
-            // The scoring mechanism is installed at (0.46, 0) (meters) on the robot
-            new Translation2d(coralTransform.getX(), 0),
-            // Obtain robot speed from drive simulation
-            driveSimulation.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
-            // Obtain robot facing from drive simulation
-            driveSimulation.getSimulatedDriveTrainPose().getRotation(),
-            // The height at which the coral is ejected
-            coralTransform.getMeasureZ(),
-            // The initial speed of the coral
-            MetersPerSecond.of(1.8),
-            // The coral is ejected vertically downwards
-            coralTransform.getRotation().getMeasureAngle().unaryMinus()));
+                .addGamePieceProjectile(new ReefscapeCoralOnFly(
+                        // Obtain robot position from drive simulation
+                        driveSimulation.getSimulatedDriveTrainPose().getTranslation(),
+                        // The scoring mechanism is installed at (0.46, 0) (meters) on the robot
+                        new Translation2d(coralTransform.getX(), 0),
+                        // Obtain robot speed from drive simulation
+                        driveSimulation.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
+                        // Obtain robot facing from drive simulation
+                        driveSimulation.getSimulatedDriveTrainPose().getRotation(),
+                        // The height at which the coral is ejected
+                        coralTransform.getMeasureZ(),
+                        // The initial speed of the coral
+                        MetersPerSecond.of(1.8),
+                        // The coral is ejected vertically downwards
+                        coralTransform.getRotation().getMeasureAngle().unaryMinus()));
+    }
+
+    public void shootAlgae() {
+        if (!holdingAlgae) return;
+
+        Pose3d algaePose = getAlgaePose();
+        Transform3d algaeTransform = algaePose.minus(new Pose3d(driveSimulation.getSimulatedDriveTrainPose()));
+        // SimulatedArena.getInstance().addGamePieceProjectile(MapleUtil.generateCoralAtPoint(getCoralPose(),
+        // velocity));
+
+        holdingAlgae = false;
+
+        SimulatedArena.getInstance()
+                .addGamePieceProjectile(new ReefscapeAlgaeOnFly(
+                        // Obtain robot position from drive simulation
+                        driveSimulation.getSimulatedDriveTrainPose().getTranslation(),
+                        // The scoring mechanism is installed at (0.46, 0) (meters) on the robot
+                        new Translation2d(algaeTransform.getX(), 0),
+                        // Obtain robot speed from drive simulation
+                        driveSimulation.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
+                        // Obtain robot facing from drive simulation
+                        driveSimulation.getSimulatedDriveTrainPose().getRotation(),
+                        // The height at which the coral is ejected
+                        algaeTransform.getMeasureZ(),
+                        // The initial speed of the coral
+                        MetersPerSecond.of(1.4),
+                        // The coral is ejected vertically downwards
+                        Degrees.of(60)));
+    }
+
+    public boolean canHoldAlgae() {
+        return currentGoal.equals(State.REEF_INTAKE) && !holdingCoral && !holdingAlgae;
+    }
+
+    public void getAlgaeFromReef() {
+        holdingAlgae = true;
     }
 }

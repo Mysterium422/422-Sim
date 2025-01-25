@@ -128,7 +128,7 @@ public class Intake extends SubsystemBase {
 
     public Pose3d getAlgaePosition() {
         return new Pose3d(driveSimulation.getSimulatedDriveTrainPose())
-            .plus(new Transform3d(new Translation3d(-0.55, 0, 0.275), new Rotation3d()));
+                .plus(new Transform3d(new Translation3d(-0.55, 0, 0.275), new Rotation3d()));
     }
 
     public boolean isHoldingAlgae() {

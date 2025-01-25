@@ -13,7 +13,6 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Degrees;
 import static frc.robot.subsystems.vision.VisionConstants.*;
 
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -21,10 +20,8 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.units.Units;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -128,7 +125,7 @@ public class RobotContainer {
         intake = new Intake(driveSimulation);
         elevator = new Elevator(driveSimulation);
         funnel = new Funnel(driveSimulation, elevator);
-        fieldManager = new FieldManager(driveSimulation);
+        fieldManager = new FieldManager(driveSimulation, elevator);
 
         // Set up auto routines
         autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -157,11 +154,14 @@ public class RobotContainer {
         drive.setDefaultCommand(DriveCommands.joystickDrive(
                 drive, () -> -controller.getLeftY(), () -> -controller.getLeftX(), () -> -controller.getRightX()));
 
-        controller.L1().onTrue(new InstantCommand(() -> {
-                funnel.isRunning = true;
-        })).onFalse(new InstantCommand(() -> {
-                funnel.isRunning = false;
-        }));
+        controller
+                .L1()
+                .onTrue(new InstantCommand(() -> {
+                    funnel.isRunning = true;
+                }))
+                .onFalse(new InstantCommand(() -> {
+                    funnel.isRunning = false;
+                }));
 
         controller.circle().onTrue(new InstantCommand(() -> {
             elevator.toggle();
@@ -179,7 +179,7 @@ public class RobotContainer {
         }));
 
         controller.R1().onTrue(new InstantCommand(() -> {
-                elevator.shoot();
+            elevator.shoot();
         }));
 
         controller.R2().onTrue(new InstantCommand(() -> {
@@ -239,7 +239,7 @@ public class RobotContainer {
         }
 
         if (elevator.isHoldingCoral()) {
-                coral.add(elevator.getCoralPose());
+            coral.add(elevator.getCoralPose());
         }
 
         Logger.recordOutput("FieldSimulation/Coral", coral.toArray(new Pose3d[0]));
@@ -249,6 +249,10 @@ public class RobotContainer {
             Pose3d intakeAlgae = intake.getAlgaePosition();
             algae.add(intakeAlgae);
         }
+        if (elevator.isHoldingAlgae()) {
+                algae.add(elevator.getAlgaePose());
+        }
+        algae.addAll(fieldManager.getReefAlgae());
         Logger.recordOutput("FieldSimulation/Algae", algae.toArray(new Pose3d[0]));
     }
 }
